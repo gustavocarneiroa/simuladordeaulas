@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simulação de aulas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body class="bg-dark text-light container">
+    <div id="app" class="my-5">
+        <div class="form-group row">
+            <label for="dataInicial" class="col-sm-2 col-form-label">Data Inicial:</label>
+            <div class="col-sm-10">
+                <input type="date" class="form-control" id="dataInicial" v-model="dataInicial">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="dataFinal" class="col-sm-2 col-form-label">Data Final:</label>
+            <div class="col-sm-10">
+                <input type="date" class="form-control" id="dataFinal" v-model="dataFinal">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="dataIgnorada" class="col-sm-2 col-form-label">Data Ignorada:</label>
+            <div class="col-sm-7">
+                <input type="date" class="form-control" id="dataIgnorada" v-model="dataIgnorada">
+            </div>
+            <div class="col-sm-3">
+                <button @click="adicionarDataIgnorada" class="btn btn-primary"
+                    :disabled="!dataIgnorada">Adicionar</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <ul class="list-group">
+                <li v-for="(data, index) in datasIgnoradas" class="list-group-item text-dark" :key="index">
+                    {{ data }} <button @click="removerDataIgnorada(index)"
+                        class="btn btn-danger btn-sm">Remover</button>
+                </li>
+            </ul>
+        </div>
+        <div class="form-group">
+            <label class="mr-2">Dias da semana:</label>
+            <template v-for="(dia, index) in nomeDoDia">
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" :value="index" v-model="diasSelecionados">
+                    <label class="form-check-label">{{ dia }}</label>
+                </div>
+            </template>
+        </div>
+        <div class="form-group">
+            <button @click="contarDiasDaSemana" class="btn btn-primary" :disabled="!dataInicial || !dataFinal">Contar
+                Dias</button>
+        </div>
+        <div v-if="totalDias > 0">
+            <h3>Simulação</h3>
+            <div class="form-group row">
+                <label for="horasPorDia" class="col-sm-2 col-form-label">Quantidade de horas por aula</label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="horasPorDia" v-model="horasPorDia">
+                </div>
+                <label for="valorDaHora" class="col-sm-2 col-form-label">Valor da hora</label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="valorDaHora" v-model="valorDaHora">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="desconto" class="col-sm-2 col-form-label">Desconto a vista:</label>
+                <div class="col-sm-10">
+                    <input type="number" class="form-control" id="desconto" v-model="desconto">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="delocamento" class="col-sm-2 col-form-label">Custo de deslocamento por aula:</label>
+                <div class="col-sm-10">
+                    <input type="number" class="form-control" id="delocamento" v-model="deslocamento">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="parcelamento" class="col-sm-2 col-form-label">Parcelamento:</label>
+                <div class="col-sm-10">
+                    <input type="number" class="form-control" id="parcelamento" v-model="parcelamento">
+                </div>
+            </div>
+            <template v-for="(_, dia) in diasDaSemana">
+                <p v-if="diasSelecionados.includes(+dia)">
+                    Total de dias de {{ nomeDoDia[dia] }}: {{ diasDaSemana[dia].length }}
+                </p>
+            </template>
+            <p>Total de dias: {{ totalDias }}</p>
+            <p v-if="valorDaHora > 0"><b>Valor de horas aula: R$ {{ (totalDias * valorDaHora * horasPorDia).toFixed(2) }}</b></p>
+            <div class="row">
+            <span class="col-md-6" v-if="valorDaHora > 0 && desconto > 0">
+                <h2>A vista</h2>
+                <p><b>Valor de horas aula com desconto: R$ {{ ((totalDias * valorDaHora *
+                        horasPorDia) - (totalDias * valorDaHora * horasPorDia * desconto / 100)).toFixed(2) }}</b></p>
+                <p v-if="deslocamento > 0"><b>Valor do deslocamento a vista: R$ {{ (totalDias * deslocamento).toFixed(2)
+                        }}</b></p>
+                <h3 v-if="deslocamento > 0">
+                    Valor a vista: {{
+                    (((totalDias * valorDaHora * horasPorDia) - (totalDias * valorDaHora * horasPorDia * desconto /
+                    100)) +
+                    (totalDias * deslocamento)).toFixed(2)}}
+                </h3>
+            </span>
+
+            <span class="col-md-6" v-if="parcelamento > 1">
+                <h2>Parcelado</h2>
+                <p v-if="valorDaHora > 0"><b>Valor por parcela: R$ {{ (totalDias * valorDaHora * horasPorDia /
+                        parcelamento).toFixed(2) }} x{{ parcelamento}}</b></p>
+                <p v-if="deslocamento > 0"><b>Valor do deslocamento por parcela: R$ {{ (totalDias * deslocamento /
+                        parcelamento).toFixed(2) }} x{{ parcelamento}}</b></p>
+                <h3 v-if="valorDaHora > 0 && deslocamento > 0">
+                    Valor parcelado: {{
+                    ((totalDias * valorDaHora * horasPorDia / parcelamento) + (totalDias * deslocamento /
+                    parcelamento)).toFixed(2) }} x{{parcelamento}}
+                </h3>
+            </span>
+        </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                dataInicial: null,
+                dataFinal: null,
+                dataIgnorada: null,
+                datasIgnoradas: [],
+                datasParaIgnorar: [],
+                horasPorDia: 1,
+                valorDaHora: 0,
+                desconto: 0,
+                parcelamento: 1,
+                deslocamento: 0,
+                nomeDoDia: ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'],
+                diasDaSemana: {
+                    0: [],
+                    1: [],
+                    2: [],
+                    3: [],
+                    4: [],
+                    5: [],
+                    6: []
+                },
+                diasSelecionados: []
+            },
+            computed: {
+                totalDias: function () {
+                    return this.diasSelecionados.reduce((acumulador, index) => acumulador + this.diasDaSemana[index].length, 0);
+                },
+            },
+            methods: {
+                adicionarDataIgnorada: function () {
+                    const dataIgnoradaFormatada = this.formatarData(this.dataIgnorada);
+                    if (!this.datasIgnoradas.includes(dataIgnoradaFormatada)) {
+                        this.datasIgnoradas.push(dataIgnoradaFormatada);
+                        this.datasParaIgnorar.push(this.dataIgnorada)
+                    }
+                },
+                removerDataIgnorada: function (index) {
+                    this.datasIgnoradas.splice(index, 1);
+                },
+                contarDiasDaSemana: function () {
+                    this.resetarDias()
+                    const dataInicial = new Date(this.dataInicial + 'T00:00:00Z');
+                    const dataFinal = new Date(this.dataFinal + 'T23:59:59Z');
+                    dataFinal.setHours(dataInicial.getHours());
+                    const umDiaEmMilissegundos = 86400000;
+                    let dataAtual = new Date(this.dataInicial + 'T03:00:00Z');
+                    while (dataAtual.getTime() <= dataFinal.getTime()) {
+                        const diaDaSemana = dataAtual.getDay();
+                        if (!this.datasParaIgnorar.includes(dataAtual.toISOString().split('T')[0])) {
+                            this.diasDaSemana[diaDaSemana].push(new Date(dataAtual).toISOString());
+                        }
+                        dataAtual.setTime(dataAtual.getTime() + umDiaEmMilissegundos);
+                    }
+                },
+                formatarData: function (data) {
+                    const partesData = data.split('-');
+                    return `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+                },
+                resetarDias() {
+                    return this.diasDaSemana = {
+                        0: [],
+                        1: [],
+                        2: [],
+                        3: [],
+                        4: [],
+                        5: [],
+                        6: []
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
