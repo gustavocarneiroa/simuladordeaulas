@@ -38,16 +38,16 @@
             <ul class="list-group">
                 <li v-for="(data, index) in mostrarDatas" class="list-group-item text-dark" :key="index">
                     {{ data }} <button @click="removerDataIgnorada(data)"
-                        class="btn btn-danger btn-sm">Remover</button>
+                        class="btn btn-danger btn-sm" style="float: right;">Remover</button>
                 </li>
             </ul>
         </div>
         <div class="form-group">
             <label class="mr-2">Dias da semana:</label>
             <template v-for="(dia, index) in nomeDoDia">
-                <div class="form-check form-check-inline">
-                    <input type="checkbox" class="form-check-input" :value="index" v-model="diasSelecionados">
-                    <label class="form-check-label">{{ dia }}</label>
+                <div class="form-check form-check-inline" style="padding: .8%; border: 1px solid white;border-radius: 15px;">
+                    <input type="checkbox" class="form-check-input" :id="'dia_da_semana'+index" :value="index" v-model="diasSelecionados">
+                    <label :for="'dia_da_semana'+index" class="form-check-label" style="text-transform: capitalize;">{{ dia }}</label>
                 </div>
             </template>
         </div>
