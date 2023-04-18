@@ -29,7 +29,7 @@
                 <input type="date" class="form-control" id="dataIgnorada" v-model="dataIgnorada">
             </div>
             <div class="col-sm-3">
-                <button @click="adicionarDataIgnorada" class="btn btn-primary"
+                <button @click="adicionarDataIgnorada(dataIgnorada)" class="btn btn-primary"
                     :disabled="!dataIgnorada">Adicionar</button>
             </div>
         </div>
@@ -151,17 +151,23 @@
                 },
                 diasSelecionados: []
             },
+            mounted() {
+                const ano = new Date().toISOString().split('-')[0];
+                fetch(`https://brasilapi.com.br/api/feriados/v1/${ano}`).then(response => response.json())
+                    .then(data => data.forEach( d => this.adicionarDataIgnorada(d.date, d.name)))
+                    .catch(error => console.error(error));
+            },
             computed: {
                 totalDias: function () {
                     return this.diasSelecionados.reduce((acumulador, index) => acumulador + this.diasDaSemana[index].length, 0);
                 },
             },
             methods: {
-                adicionarDataIgnorada: function () {
-                    const dataIgnoradaFormatada = this.formatarData(this.dataIgnorada);
-                    if (!this.datasIgnoradas.includes(dataIgnoradaFormatada)) {
-                        this.datasIgnoradas.push(dataIgnoradaFormatada);
-                        this.datasParaIgnorar.push(this.dataIgnorada)
+                adicionarDataIgnorada: function (date, name) {
+                    const dataIgnoradaFormatada = this.formatarData(date);
+                    if (!this.datasParaIgnorar.includes(date)) {
+                        this.datasIgnoradas.push(`${dataIgnoradaFormatada} ${name ? ' - ' + name : ''}`);
+                        this.datasParaIgnorar.push(date)
                     }
                 },
                 removerDataIgnorada: function (index) {
