@@ -34,9 +34,10 @@
             </div>
         </div>
         <div class="form-group">
+            <button class="btn btn-primary" @click="toggleFeriados">Mostrar/ocultar feriados</button>
             <ul class="list-group">
-                <li v-for="(data, index) in datasIgnoradas" class="list-group-item text-dark" :key="index">
-                    {{ data }} <button @click="removerDataIgnorada(index)"
+                <li v-for="(data, index) in mostrarDatas" class="list-group-item text-dark" :key="index">
+                    {{ data }} <button @click="removerDataIgnorada(data)"
                         class="btn btn-danger btn-sm">Remover</button>
                 </li>
             </ul>
@@ -140,6 +141,7 @@
                 parcelamento: 1,
                 deslocamento: 0,
                 nomeDoDia: ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'],
+                mostrarFeriados: false,
                 diasDaSemana: {
                     0: [],
                     1: [],
@@ -156,11 +158,21 @@
                 fetch(`https://brasilapi.com.br/api/feriados/v1/${ano}`).then(response => response.json())
                     .then(data => data.forEach( d => this.adicionarDataIgnorada(d.date, d.name)))
                     .catch(error => console.error(error));
+                fetch(`https://brasilapi.com.br/api/feriados/v1/${+ano+1}`).then(response => response.json())
+                    .then(data => data.forEach( d => this.adicionarDataIgnorada(d.date, d.name)))
+                    .catch(error => console.error(error));
             },
             computed: {
                 totalDias: function () {
                     return this.diasSelecionados.reduce((acumulador, index) => acumulador + this.diasDaSemana[index].length, 0);
                 },
+                mostrarDatas: function() {
+                    if(!this.mostrarFeriados) {
+                        return this.datasIgnoradas.filter( data => !data.split('').includes('-'))
+                    }
+
+                    return this.datasIgnoradas
+                }
             },
             methods: {
                 adicionarDataIgnorada: function (date, name) {
@@ -170,8 +182,11 @@
                         this.datasParaIgnorar.push(date)
                     }
                 },
-                removerDataIgnorada: function (index) {
+                removerDataIgnorada: function (date) {
+                    const index = this.datasIgnoradas.findIndex( data => data === date);
+                    if(date < 0 ) return;
                     this.datasIgnoradas.splice(index, 1);
+                    this.datasParaIgnorar.splice(index, 1);
                 },
                 contarDiasDaSemana: function () {
                     this.resetarDias()
@@ -202,6 +217,9 @@
                         5: [],
                         6: []
                     }
+                },
+                toggleFeriados() {
+                    this.mostrarFeriados = !this.mostrarFeriados
                 }
             }
         });
